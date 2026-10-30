@@ -1,0 +1,58 @@
+name: Prepare release
+
+on:
+  workflow_dispatch:
+    inputs:
+      part:
+        description: Version increment
+        required: true
+        type: choice
+        options: [patch, minor, major]
+        default: patch
+
+permissions:
+  contents: read
+
+concurrency:
+  group: prepare-release
+  cancel-in-progress: false
+
+jobs:
+  version-pr:
+    if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      pull-requests: write
+      actions: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: '0.13.6'
+          python-version: '3.13'
+      - name: Bump version
+        id: version
+        env:
+          BUMP_PART: ${{ inputs.part }}
+        run: uv run --no-project --python 3.13 python scripts/release_version.py bump --part "$BUMP_PART"
+      - name: Create version pull request and start CI
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          set -euo pipefail
+          branch="release/v$VERSION"
+          git switch -c "$branch"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add pyproject.toml uv.lock src/anyllama/__init__.py
+          git commit -m "Release v$VERSION"
+          git push origin "HEAD:refs/heads/$branch"
+          printf 'Update AnyLlama to v%s.\n\nAfter CI passes, merge this PR and run the Release workflow from the default branch.\n' "$VERSION" > "$RUNNER_TEMP/release-body.md"
+          gh pr create --base "$DEFAULT_BRANCH" --head "$branch" --title "Release v$VERSION" --body-file "$RUNNER_TEMP/release-body.md"
+          gh workflow run ci.yml --ref "$branch"

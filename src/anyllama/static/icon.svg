@@ -1,0 +1,12 @@
+<!-- Generated from anyllama/branding.py; edit geometry there. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <rect width="48" height="48" rx="12" fill="#68217A"/>
+  <polygon points="13,25 13,22 15,19 12,9 15,7 20,17 22,14 24,16 26,14 28,17 33,7 36,9 33,19 35,22 35,25 32,28 31,35 27,40 21,40 17,35 16,28" fill="#FFFFFF"/>
+  <polyline points="15,11 18,18" fill="none" stroke="#D8B7ED" stroke-width="2" stroke-linecap="round"/>
+  <polyline points="33,11 30,18" fill="none" stroke="#D8B7ED" stroke-width="2" stroke-linecap="round"/>
+  <ellipse cx="19.0" cy="23.5" rx="1.5" ry="1.5" fill="#5C2D91"/>
+  <ellipse cx="29.0" cy="23.5" rx="1.5" ry="1.5" fill="#5C2D91"/>
+  <ellipse cx="24.0" cy="31.0" rx="5.0" ry="4.0" fill="#D8B7ED"/>
+  <polygon points="22,30 26,30 24,32.5" fill="#5C2D91"/>
+  <path d="M24 32v2" stroke="#5C2D91" stroke-width="1.3" stroke-linecap="round"/>
+</svg>

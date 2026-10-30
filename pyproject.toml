@@ -1,0 +1,42 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "anyllama"
+version = "0.4.0"
+description = "Your models. One local endpoint for Visual Studio."
+readme = "README.md"
+requires-python = ">=3.13,<3.14"
+license = "MIT"
+license-files = ["LICENSE"]
+
+dependencies = [
+  "fastapi>=0.115", "uvicorn>=0.34", "httpx>=0.28", "jinja2>=3.1.6",
+  "pydantic>=2.10", "keyring>=25", "pystray>=0.19.5", "pillow>=11",
+]
+
+[project.urls]
+Repository = "https://github.com/pawelworyna/AnyLlama"
+Issues = "https://github.com/pawelworyna/AnyLlama/issues"
+
+[project.scripts]
+anyllama = "anyllama.desktop:main"
+
+[dependency-groups]
+dev = ["pytest>=8", "pytest-asyncio>=0.25", "ruff>=0.11", "pyinstaller>=6.12", "playwright>=1.50"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/anyllama"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+
+[tool.ruff]
+target-version = "py313"
+line-length = 110
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I"]

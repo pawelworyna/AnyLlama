@@ -1,0 +1,14 @@
+* text=auto
+*.py text eol=lf
+*.toml text eol=lf
+*.lock text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.js text eol=lf
+*.css text eol=lf
+*.html text eol=lf
+*.md text eol=lf
+*.png binary
+*.ico binary
+*.exe binary
+*.zip binary

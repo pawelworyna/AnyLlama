@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <meta name="htmx-config" content='{"includeIndicatorStyles":false,"allowEval":false,"allowScriptTags":false}'>
+  <title>AnyLlama — Your models, connected.</title>
+  <link rel="icon" href="/admin/static/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/admin/static/app.css">
+  <script src="/admin/static/htmx.min.js" defer></script>
+  <script src="/admin/static/app.js" defer></script>
+</head>
+<body>
+<a href="#content" class="skip-link">Skip to content</a>
+<aside class="sidebar">
+  <a class="brand" href="#overview" aria-label="AnyLlama overview"><img src="/admin/static/icon.svg" alt="" width="37" height="37"><span>AnyLlama<span class="brand-dot">.</span></span></a>
+  <div class="workspace-label"><span class="small-dot"></span> PERSONAL WORKSPACE</div>
+  <nav aria-label="Main navigation">
+    <a href="#overview" data-nav="overview"><span aria-hidden="true">◫</span> Overview</a>
+    <a href="#providers" data-nav="providers" aria-label="Providers"><span aria-hidden="true">⌘</span> Providers <b id="nav-provider-count" aria-hidden="true">0</b></a>
+    <a href="#models" data-nav="models"><span aria-hidden="true">▦</span> Models</a>
+    <a href="#activity" data-nav="activity"><span aria-hidden="true">⌁</span> Activity</a>
+    <div class="nav-divider"></div>
+    <a href="#settings" data-nav="settings"><span aria-hidden="true">⚙</span> Settings</a>
+  </nav>
+  <div class="sidebar-bottom">
+    <button class="guide-link" data-action="guide"><span>↗</span> Connect Visual Studio</button>
+    <div class="local-note"><span class="small-dot"></span><div>Runs on your machine<small>Local proxy · v{{ version }}</small></div></div>
+  </div>
+</aside>
+<div class="shell">
+  <header class="topbar"><div class="breadcrumb">Workspace <span>/</span> <strong id="page-label">Overview</strong></div><div class="topbar-right"><a id="update-link" class="pill positive" hidden target="_blank" rel="noopener noreferrer">Update available</a><span class="pill neutral">LOCAL ONLY</span><span id="live-indicator" class="live-indicator" hx-get="/admin/api/indicator" hx-trigger="status-ready from:body, every 15s" hx-swap="innerHTML"><span class="small-dot"></span> Proxy running</span></div></header>
+  <main id="content" tabindex="-1"><div class="loading-state"><span class="spinner"></span><h1>Connecting to your workspace</h1></div></main>
+  <footer><span>Made for the way you build.</span><span>Any provider. One endpoint.</span></footer>
+</div>
+<div id="toast-region" role="status" aria-live="polite"></div>
+<dialog id="modal" aria-labelledby="dialog-title"><div id="modal-content"></div></dialog>
+</body>
+</html>
