@@ -24,7 +24,7 @@ Implementation/build runtime: **CPython 3.13.18, Windows x64**.
 | Metrics v0.2.0 | **Passed with fixtures** | Reported/estimated/free/unknown cost, cache accounting, reasoning subset, timed stream/tool fragments, native duration, cancellation/error semantics and v1 migration |
 | New v0.3.0 profiles | **Passed with fixtures** | Ten cloud + five local profiles: add/check/enable, chat, SSE, tool call and follow-up; optional local keys, Anthropic pagination, Gemini signed replay protection and usage variants |
 | Update checks | **Passed with fixtures** | Numeric version comparison, stable/ready assets, cache persistence, safe links, bounded metadata, errors, cancellation and admin/CSRF protection |
-| Release workflows | **Static validation passed** | actionlint 1.7.12; hosted execution awaits the user's first push/run |
+| Release workflows | **Static validation passed; hosted rerun pending** | actionlint 1.7.12; first hosted CI run exposed a test import-path issue, reproduced and fixed locally with explicit pytest `pythonpath` |
 
 Browser scenarios: first-run wizard, add/check provider, enable model, configure metadata,
 add manual model, search, change light/dark theme, pause/resume, navigate all views,
