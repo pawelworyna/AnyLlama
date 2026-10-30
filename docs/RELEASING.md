@@ -28,8 +28,9 @@ configuration export or dashboard bootstrap link.
    requests if you want to use **Prepare release**. The workflow does not approve/merge
    its own PR. No personal access token or provider API keys are required.
 3. Optionally enable GitHub private vulnerability reporting to use the route in SECURITY.md.
-4. Run **Actions → Release → Run workflow** from the default branch. For the initial
-   source this publishes **v0.4.0** after tests/build/smoke checks pass.
+4. A push to `main` automatically starts **Release**. If the current version has no
+   release, it publishes **v0.4.0** after tests/build/smoke checks pass. If an existing
+   commit needs a retry, run **Actions → Release → Run workflow** from `main`.
 
 ## Subsequent versions
 
@@ -39,8 +40,9 @@ configuration export or dashboard bootstrap link.
    PR and explicitly starts CI on its branch. GitHub can also show an approval-required
    PR workflow run for bot-created PRs; approve it if your branch rules require that run.
 3. Review the PR, add human-facing changelog notes if needed and merge after checks pass.
-4. Run **Release** from the default branch. Alternatively, push a matching `vMAJOR.MINOR.PATCH`
-   tag yourself; the tag triggers the same pipeline. A mismatching tag fails before publication.
+4. Merging to `main` starts **Release** automatically. An existing release is left
+   untouched, so ordinary pushes do not create duplicate versions. Alternatively, push
+   a matching `vMAJOR.MINOR.PATCH` tag yourself; a mismatching tag fails before publication.
 
 For a local version bump:
 
