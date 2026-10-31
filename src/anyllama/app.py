@@ -61,7 +61,7 @@ def create_app(
         except ValueError as exc:
             raise ProxyError(
                 400,
-                "This saved connection needs an HTTPS API URL. Create a connection with a secure URL.",
+                "This saved connection needs HTTPS or an HTTP URL with a loopback or private IP address.",
                 "invalid_provider_url",
             ) from exc
         try:
@@ -185,6 +185,8 @@ def create_app(
     async def validation_error(request, exc):
         # Validation errors can contain the rejected API key; do not echo input values.
         fields = ", ".join(".".join(str(p) for p in e["loc"][1:]) for e in exc.errors())
+        if any(e["loc"] == ("body", "base_url") for e in exc.errors()):
+            return error_response("openai", ProxyError(422, "Invalid API URL. Use HTTPS, or HTTP with localhost or a private IP address; omit credentials, query and fragment.", "validation_error"))
         return error_response("openai", ProxyError(422, f"Invalid value for: {fields}", "validation_error"))
 
     @app.exception_handler(HTTPException)

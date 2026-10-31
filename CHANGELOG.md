@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.4.1 — 2026-10-31
+
+- Allow local providers such as LM Studio to use HTTP on private network IP addresses,
+  with a warning that network traffic is unencrypted.
+
 ## 0.4.0 — 2026-10-30
 
 - Check the public GitHub repository for stable Windows releases, automatically once a day

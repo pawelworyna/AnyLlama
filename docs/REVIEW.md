@@ -37,7 +37,8 @@ We do not fabricate a parameter count, GGUF format or quantization for remote se
 1. **Remote plaintext API URLs:** `ProviderInput` previously accepted HTTP to arbitrary hosts,
    allowing credentials and prompts to be sent without TLS after misconfiguration. Remote API
    URLs now require HTTPS, including saved connections checked again before use. HTTP remains
-   available for literal loopback addresses and localhost.
+   available for literal loopback addresses and localhost. Starting with v0.4.1, literal
+   private-network IP addresses also accept HTTP; the UI warns that traffic is unencrypted.
 2. **Late request-size limit:** inference checked the size after buffering the entire body, and
    framework-parsed admin bodies did not use that check. A bounded ASGI reader now rejects
    oversized declared or chunked bodies with HTTP 413 before framework parsing, across routes.

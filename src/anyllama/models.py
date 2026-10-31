@@ -1,8 +1,10 @@
-from ipaddress import ip_address
+from ipaddress import ip_address, ip_network
 from typing import Literal
 from urllib.parse import urlsplit
 
 from pydantic import BaseModel, Field, field_validator
+
+LAN_NETWORKS = tuple(ip_network(net) for net in ("10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16", "fc00::/7"))
 
 PRESETS = {
     "openrouter": {"name": "OpenRouter", "base_url": "https://openrouter.ai/api/v1", "mark": "↗"},
@@ -115,13 +117,14 @@ class ProviderInput(BaseModel):
         except ValueError as exc:
             raise ValueError("Invalid API port") from exc
         if parts.scheme == "http":
-            loopback = parts.hostname.lower() == "localhost"
+            allowed = parts.hostname.lower() == "localhost"
             try:
-                loopback = loopback or ip_address(parts.hostname).is_loopback
+                address = ip_address(parts.hostname)
+                allowed = allowed or address.is_loopback or any(address in net for net in LAN_NETWORKS)
             except ValueError:
                 pass
-            if not loopback:
-                raise ValueError("Remote API endpoints require HTTPS; HTTP is allowed only on loopback")
+            if not allowed:
+                raise ValueError("Remote API endpoints require HTTPS; HTTP is allowed on loopback or private IPs")
         return value.strip().rstrip("/")
 
 

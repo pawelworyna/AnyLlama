@@ -42,9 +42,12 @@ Addresses can be edited while adding a connection, including the port and API pr
 Jan's **Execute Tools on Server** should stay disabled: the IDE executes Agent tools.
 Older Lemonade releases may use a different port or `/api/v1` prefix; use the address
 shown by that installation. oMLX requires Apple Silicon/macOS. For the Windows AnyLlama
-application, use a preconfigured local tunnel to the Mac or its HTTPS API endpoint;
-the loopback preset does not automatically discover or connect to another computer.
-AnyLlama accepts plain HTTP only on loopback. No network listener or tunnel is created.
+application, use its HTTPS API endpoint or its private IP address. For LM Studio,
+enter `http://<server-private-ip>:1234/v1` and replace the placeholder with the
+server's actual address. The preset does not automatically
+discover another computer. HTTP is also supported for loopback and private IPv4/IPv6
+addresses; it is unencrypted, including prompts and API keys. Public endpoints require
+HTTPS. AnyLlama itself still listens only on loopback; no network listener is created.
 
 ## Compatibility and metadata
 
