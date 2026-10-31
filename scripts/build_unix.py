@@ -26,7 +26,7 @@ def main():
     if sys.platform == "darwin":
         icon = build / "anyllama.png"
         create_icon(size=512).save(icon)
-        options += ["--icon", str(icon), "--osx-bundle-identifier", "com.anyllama.app"]
+        options += ["--icon", str(icon), "--osx-bundle-identifier", "com.anyllama.app", "--target-arch", "arm64"]
         hidden = ["pystray._darwin", "keyring.backends.macOS"]
     else:
         hidden = ["keyring.backends.SecretService"]
