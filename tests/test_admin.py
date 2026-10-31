@@ -59,7 +59,9 @@ def test_first_provider_workflow_and_secrets_never_returned(make_client):
         client.patch(f"/admin/api/models/{model_id}", json={"enabled": True}, headers=headers).status_code
         == 200
     )
-    assert model_id in [m["name"] for m in client.get("/api/tags").json()["models"]]
+    assert app.state.store.model(model_id)["public_id"] in [
+        m["name"] for m in client.get("/api/tags").json()["models"]
+    ]
     export = client.get("/admin/api/export")
     assert "new-secret" not in export.text and "top-secret-key" not in export.text
     assert "api_key" not in export.text

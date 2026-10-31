@@ -5,7 +5,6 @@ import json
 import secrets
 import sqlite3
 import time
-import uuid
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -224,8 +223,8 @@ def create_app(
         return {
             "models": [
                 {
-                    "name": m["id"],
-                    "model": m["id"],
+                    "name": m["public_id"],
+                    "model": m["public_id"],
                     "modified_at": "2026-01-01T00:00:00Z",
                     "size": 0,
                     "digest": hashlib.sha256(m["id"].encode()).hexdigest(),
@@ -245,7 +244,7 @@ def create_app(
         return {
             "object": "list",
             "data": [
-                {"id": m["id"], "object": "model", "created": 0, "owned_by": m["provider_name"]}
+                {"id": m["public_id"], "object": "model", "created": 0, "owned_by": m["provider_name"]}
                 for m in store.models(True)
             ],
         }
@@ -299,7 +298,7 @@ def create_app(
         )
         if has_images and model.get("vision") is False:
             raise ProxyError(400, "This model does not support images", "unsupported_image")
-        alias = model["id"]
+        alias = model["public_id"] if data["model"] in (model["public_id"], model["public_id"] + ":latest") else model["id"]
         data["model"] = model["upstream_id"]
         provider = store.provider(model["provider_id"])
         if (
@@ -551,7 +550,7 @@ def create_app(
 
     @app.post("/admin/api/providers")
     async def add_provider(data: ProviderInput):
-        identifier = uuid.uuid4().hex[:12]
+        identifier = store.new_provider_id()
         key = data.api_key
         if PRESETS[data.kind].get("requires_key", True) and not key:
             raise ProxyError(400, "An API key is required for this provider", "missing_key")

@@ -112,7 +112,7 @@ def test_profile_catalog_generation_stream_and_tool_followup(make_client, kind):
     else:
         assert model["tools"] is None and model["context_length"] is None
     assert model["input_price_per_million"] is None
-    assert model_id in [item["name"] for item in client.get("/api/tags").json()["models"]]
+    assert model["public_id"] in [item["name"] for item in client.get("/api/tags").json()["models"]]
     payload = {
         "model": model_id,
         "messages": [{"role": "user", "content": "Fixture prompt"}],

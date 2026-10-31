@@ -1,8 +1,10 @@
 """Small, transaction-protected store. Conversation bodies never enter this module."""
 
 import json
+import re
 import sqlite3
 import threading
+import unicodedata
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
@@ -45,6 +47,9 @@ class Store:
                 overrides TEXT NOT NULL DEFAULT '{}', enabled INTEGER NOT NULL DEFAULT 0,
                 UNIQUE(provider_id, upstream_id)
             );
+            CREATE TABLE IF NOT EXISTS provider_aliases (
+                alias TEXT PRIMARY KEY, provider_id TEXT NOT NULL UNIQUE
+            );
             CREATE TABLE IF NOT EXISTS settings (id INTEGER PRIMARY KEY CHECK(id=1), data TEXT NOT NULL);
             CREATE TABLE IF NOT EXISTS update_cache (id INTEGER PRIMARY KEY CHECK(id=1), data TEXT NOT NULL);
             CREATE TABLE IF NOT EXISTS activity (
@@ -58,7 +63,9 @@ class Store:
         for name, column_type in ACTIVITY_METRICS.items():
             if name not in existing:
                 self.db.execute(f"ALTER TABLE activity ADD COLUMN {name} {column_type}")
-        self.db.execute("PRAGMA user_version=3")
+        for provider in self.db.execute("SELECT id,name FROM providers ORDER BY rowid").fetchall():
+            self._ensure_provider_alias(provider["id"], provider["name"])
+        self.db.execute("PRAGMA user_version=4")
         self.db.commit()
 
     def close(self):
@@ -75,9 +82,43 @@ class Store:
     def provider(self, provider_id: str) -> dict | None:
         return next((p for p in self.providers() if p["id"] == provider_id), None)
 
+    def _ensure_provider_alias(self, provider_id: str, name: str):
+        if self.db.execute("SELECT 1 FROM provider_aliases WHERE provider_id=?", (provider_id,)).fetchone():
+            return
+        normalized = unicodedata.normalize("NFKD", name).encode("ascii", "ignore").decode().lower()
+        base = re.sub(r"[^a-z0-9]+", "-", normalized).strip("-")[:48].strip("-") or "provider"
+        # Provider IDs use 12 hex characters; reserve that namespace for old model IDs.
+        if re.fullmatch(r"[0-9a-f]{12}", base):
+            base += "-provider"
+        alias = base
+        suffix = 2
+        while self.db.execute(
+            "SELECT 1 FROM provider_aliases WHERE alias=? UNION ALL SELECT 1 FROM providers WHERE id=?",
+            (alias, alias),
+        ).fetchone():
+            alias = f"{base}-{suffix}"
+            suffix += 1
+        self.db.execute("INSERT INTO provider_aliases(alias,provider_id) VALUES(?,?)", (alias, provider_id))
+
+    def new_provider_id(self) -> str:
+        with self.lock:
+            while True:
+                identifier = uuid.uuid4().hex[:12]
+                if not self.db.execute(
+                    "SELECT 1 FROM provider_aliases WHERE provider_id=? UNION ALL SELECT 1 FROM providers WHERE id=?",
+                    (identifier, identifier),
+                ).fetchone():
+                    return identifier
+
     def save_provider(self, data: dict, provider_id: str | None = None) -> dict:
-        provider_id = provider_id or uuid.uuid4().hex[:12]
+        provider_id = provider_id or self.new_provider_id()
         with self.lock, self.db:
+            active = self.db.execute("SELECT 1 FROM providers WHERE id=?", (provider_id,)).fetchone()
+            retired = self.db.execute(
+                "SELECT 1 FROM provider_aliases WHERE provider_id=?", (provider_id,)
+            ).fetchone()
+            if retired and not active:
+                raise ValueError("A retired provider ID cannot be reused")
             self.db.execute(
                 """
                 INSERT INTO providers(id,name,kind,base_url,has_key) VALUES(?,?,?,?,?)
@@ -86,6 +127,7 @@ class Store:
             """,
                 (provider_id, data["name"], data["kind"], data["base_url"], data["has_key"]),
             )
+            self._ensure_provider_alias(provider_id, data["name"])
         return self.provider(provider_id)
 
     def delete_provider(self, provider_id: str):
@@ -113,8 +155,9 @@ class Store:
     def models(self, enabled_only=False) -> list[dict]:
         with self.lock:
             rows = self.db.execute("""
-                SELECT m.*,p.name AS provider_name,p.kind AS provider_kind
-                FROM models m JOIN providers p ON p.id=m.provider_id ORDER BY p.name,m.upstream_id
+                SELECT m.*,p.name AS provider_name,p.kind AS provider_kind,a.alias AS provider_alias
+                FROM models m JOIN providers p ON p.id=m.provider_id
+                JOIN provider_aliases a ON a.provider_id=p.id ORDER BY p.name,m.upstream_id
             """).fetchall()
         result = []
         for row in rows:
@@ -128,6 +171,7 @@ class Store:
                     **metadata,
                     **overrides,
                     **data,
+                    "public_id": f"{data['provider_alias']}/{data['upstream_id']}",
                     "enabled": bool(data["enabled"]),
                     "overridden_fields": list(overrides),
                 }
@@ -137,9 +181,13 @@ class Store:
     def model(self, model_id: str, enabled_only=False) -> dict | None:
         models = self.models(enabled_only)
         exact = next((m for m in models if m["id"] == model_id), None)
+        if not exact:
+            exact = next((m for m in models if m["public_id"] == model_id), None)
         # Some Ollama clients add :latest. Exact matches always take precedence.
         if not exact and model_id.endswith(":latest"):
             exact = next((m for m in models if m["id"] == model_id[:-7]), None)
+            if not exact:
+                exact = next((m for m in models if m["public_id"] == model_id[:-7]), None)
         return exact
 
     def add_model(self, provider_id: str, data: dict):

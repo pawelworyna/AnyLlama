@@ -10,7 +10,8 @@ def request(model, **extra):
 
 
 @pytest.mark.parametrize("streaming", [False, True])
-def test_visual_studio_bare_chat_completions_alias(make_client, streaming):
+@pytest.mark.parametrize("friendly", [False, True])
+def test_visual_studio_bare_chat_completions_alias(make_client, streaming, friendly):
     seen = []
 
     def upstream(req):
@@ -20,7 +21,8 @@ def test_visual_studio_bare_chat_completions_alias(make_client, streaming):
         return httpx.Response(200, json=completion("VS alias works"))
 
     client, _, model, _ = make_client(upstream)
-    response = client.post("/chat/completions", json=request(model, stream=streaming))
+    identifier = model["public_id"] if friendly else model["id"]
+    response = client.post("/chat/completions", json={**request(model, stream=streaming), "model": identifier})
     assert response.status_code == 200
     assert seen[0]["model"] == model["upstream_id"]
     assert "VS alias works" in response.text
@@ -40,8 +42,8 @@ def test_discovery_and_native_nonstream(make_client):
         return httpx.Response(200, json=completion())
 
     client, app, model, _ = make_client(upstream)
-    assert client.get("/api/tags").json()["models"][0]["name"] == model["id"]
-    assert client.get("/v1/models").json()["data"][0]["id"] == model["id"]
+    assert client.get("/api/tags").json()["models"][0]["name"] == model["public_id"]
+    assert client.get("/v1/models").json()["data"][0]["id"] == model["public_id"]
     info = client.post("/api/show", json={"model": model["id"] + ":latest"}).json()
     assert "tools" in info["capabilities"]
     response = client.post("/api/chat", json=request(model, stream=False))

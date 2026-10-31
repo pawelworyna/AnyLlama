@@ -47,6 +47,12 @@ The tray icon opens the dashboard. First launch opens a setup wizard:
    appear together under this connection. If you change the selection in AnyLlama and VS
    still shows the old list, remove and add the Ollama provider again using the same endpoint.
 
+Models use readable, stable connection prefixes such as `lm-studio/vendor/model`. Connections
+with the same name receive distinct prefixes. Renaming a connection does not change its prefix,
+and previously configured model IDs continue working. Retired prefixes remain reserved after
+removing a connection, so an old selection cannot silently point to a different provider. VS may
+need to reload its model list to display the new names.
+
 No Ollama installation is needed. Provider keys are configured only in AnyLlama. The
 OpenAI-compatible API also uses the `/v1` address (use a nonempty placeholder key only
 if that client requires one). Copy the actual endpoint from the dashboard if you changed ports.

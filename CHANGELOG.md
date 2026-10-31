@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.5.1 — 2026-10-31
+
+- Show readable, stable provider prefixes in model IDs while continuing to accept existing IDs.
+
 ## 0.5.0 — 2026-10-31
 
 - Add release builds for Windows ARM64, Apple Silicon and Linux amd64/arm64 Debian packages.
