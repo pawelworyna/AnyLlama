@@ -20,12 +20,16 @@ from .branding import create_icon
 
 
 def default_data_dir() -> Path:
-    return Path(os.environ.get("LOCALAPPDATA", Path.home() / ".local" / "share")) / "AnyLlama"
+    if sys.platform == "win32":
+        return Path(os.environ.get("LOCALAPPDATA", Path.home() / "AppData" / "Local")) / "AnyLlama"
+    if sys.platform == "darwin":
+        return Path.home() / "Library" / "Application Support" / "AnyLlama"
+    return Path(os.environ.get("XDG_DATA_HOME", Path.home() / ".local" / "share")) / "AnyLlama"
 
 
 class InstanceLock:
     def __init__(self, directory: Path):
-        directory.mkdir(parents=True, exist_ok=True)
+        directory.mkdir(mode=0o700, parents=True, exist_ok=True)
         self.path = directory / "instance.json"
         self.file = (directory / ".instance.lock").open("a+b")
         self.owned = False
@@ -52,7 +56,12 @@ class InstanceLock:
 
     def publish(self, url: str):
         temporary = self.path.with_suffix(".tmp")
-        temporary.write_text(json.dumps({"pid": os.getpid(), "url": url}), encoding="utf-8")
+        flags = os.O_WRONLY | os.O_CREAT | os.O_TRUNC | getattr(os, "O_NOFOLLOW", 0)
+        descriptor = os.open(temporary, flags, 0o600)
+        with os.fdopen(descriptor, "w", encoding="utf-8") as target:
+            if sys.platform != "win32":
+                os.fchmod(target.fileno(), 0o600)
+            target.write(json.dumps({"pid": os.getpid(), "url": url}))
         temporary.replace(self.path)
 
     def existing_url(self) -> str | None:
@@ -114,6 +123,7 @@ def main():
     parser.add_argument("--headless", action="store_true", help="Run in the foreground without a tray icon")
     parser.add_argument("--startup", action="store_true", help="Start quietly after Windows sign-in")
     parser.add_argument("--no-browser", action="store_true", help="Do not open a browser on launch")
+    parser.add_argument("--open-browser", action="store_true", help="Open the dashboard even in headless mode")
     parser.add_argument(
         "--no-update-check", action="store_true", help="Disable background update checks for this run"
     )
@@ -124,7 +134,7 @@ def main():
     instance = InstanceLock(data_dir)
     if not instance.acquire():
         existing = instance.existing_url()
-        if existing and not args.no_browser and not args.headless and not args.startup:
+        if existing and not args.no_browser and not args.startup and (not args.headless or args.open_browser):
             webbrowser.open(existing)
         if args.headless and sys.stdout:
             print("AnyLlama is already running for this data directory.", flush=True)
@@ -141,7 +151,7 @@ def main():
         )
         app = create_app(
             data_dir,
-            apply_autostart=lambda enabled: set_autostart(enabled, data_dir),
+            apply_autostart=(lambda enabled: set_autostart(enabled, data_dir)) if sys.platform == "win32" else None,
             update_interval=0 if args.no_update_check else 300,
         )
         if args.port is not None:
@@ -161,7 +171,7 @@ def main():
         except OSError:
             show_error(
                 f"Port {port} is already in use. Close the other process or run "
-                "AnyLlama.exe --port 11436 to save a different port.",
+                "AnyLlama --port 11436 to save a different port.",
                 args.headless,
             )
             raise SystemExit(1)
@@ -180,6 +190,8 @@ def main():
         if args.headless:
             if sys.stdout:
                 print(f"AnyLlama dashboard (private link): {url}", flush=True)
+            if args.open_browser and not args.no_browser:
+                webbrowser.open(url)
             server.run(sockets=[sock])
         else:
             import pystray

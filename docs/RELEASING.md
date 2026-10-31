@@ -61,6 +61,8 @@ The explicit CI dispatch avoids requiring a separate PAT for version PRs. See Gi
 - Windows x64 `AnyLlama.exe`, built with its own Python runtime by PyInstaller.
 - `AnyLlama-<version>-win-x64.zip`, including the EXE, MIT license, third-party notices
   and user/validation documentation.
+- A Windows ARM64 ZIP, an Apple Silicon macOS app ZIP, and Debian packages for amd64 and arm64.
+  Each is built and smoke-tested on its native GitHub-hosted runner before publication.
 - `SHA256SUMS.txt`, third-party notices and a runner smoke-check `validation.json`.
 
 Only the publishing job has release write permissions. Builds run with read-only tokens.
@@ -70,7 +72,9 @@ draft, uploads assets and then publishes it. It refuses to overwrite an existing
 If a run leaves a draft after a failure, inspect it in GitHub; remove only that incomplete
 draft before retrying, or finish it manually. Do not replace a published version's files.
 
-The EXE is currently unsigned. The hosted runner smoke test skips the interactive tray
+The EXE is currently unsigned. The macOS app is ad-hoc signed, not Developer ID signed or
+notarized. Linux uses a terminal-backed launcher and requires an unlocked Secret Service for
+keys; login autostart is currently Windows-only. The hosted runner smoke test skips the interactive tray
 and real Windows Credential Manager checks, because a service session is not a desktop
 acceptance environment. These skips are explicit in `validation.json`. Test those locally
 with `uv run python scripts/verify_exe.py` before a release when changing desktop behavior.
@@ -86,7 +90,7 @@ are cached for 24 hours; failures are cached for an hour. Manual checks have a o
 cooldown. Checks run in the background and do not block generation.
 
 Use **Settings → Updates** for a manual check or to disable automatic checks. A newer,
-published stable release is advertised only when its matching Windows ZIP is uploaded.
+published stable release is advertised only when its matching platform package is uploaded.
 The app constructs a GitHub release link itself; it never executes release notes, downloads
 an executable or installs an update. Prereleases, drafts and malformed/incomplete metadata
 are rejected. Until the first release exists, it reports that no stable release was found.

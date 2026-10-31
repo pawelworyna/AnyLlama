@@ -69,7 +69,7 @@ def create_app(
         except Exception as exc:
             raise ProxyError(
                 503,
-                "Windows Credential Manager is unavailable. Unlock your Windows session and try again.",
+                "The system credential store is unavailable. Unlock your session and try again.",
                 "credential_store_unavailable",
             ) from exc
         if provider["has_key"] and not key:
@@ -528,6 +528,7 @@ def create_app(
     async def state(request: Request):
         return {
             "version": __version__,
+            "autostart_available": apply_autostart is not None,
             "csrf": request.state.csrf,
             "paused": app.state.paused,
             "endpoint": f"http://127.0.0.1:{app.state.bound_port}",
@@ -559,7 +560,7 @@ def create_app(
                 vault.set(identifier, key)
         except Exception as exc:
             raise ProxyError(
-                503, "Could not save the key in Windows Credential Manager", "credential_store_unavailable"
+                503, "Could not save the key in the system credential store", "credential_store_unavailable"
             ) from exc
         provider = store.save_provider(
             {**data.model_dump(exclude={"api_key"}), "has_key": bool(key)}, identifier
@@ -584,7 +585,7 @@ def create_app(
             except Exception as exc:
                 raise ProxyError(
                     503,
-                    "Could not update the key in Windows Credential Manager",
+                    "Could not update the key in the system credential store",
                     "credential_store_unavailable",
                 ) from exc
             has_key = bool(data.api_key)
@@ -602,7 +603,7 @@ def create_app(
             except Exception as exc:
                 raise ProxyError(
                     503,
-                    "Could not remove the key from Windows Credential Manager",
+                    "Could not remove the key from the system credential store",
                     "credential_store_unavailable",
                 ) from exc
             store.delete_provider(provider_id)

@@ -33,10 +33,12 @@ class TestVault:
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--browser", choices=("chrome", "chromium"), default="chrome")
-    browser_channel = parser.parse_args().browser
+    parser.add_argument("--screenshots-dir", type=Path)
+    options = parser.parse_args()
+    browser_channel = options.browser
     root = Path(__file__).resolve().parents[1]
     data = root / ".test-data" / ("ui-" + uuid.uuid4().hex[:8])
-    screenshots = root / "docs" / "screenshots"
+    screenshots = options.screenshots_dir or root / "docs" / "screenshots"
     screenshots.mkdir(parents=True, exist_ok=True)
 
     def provider(request):

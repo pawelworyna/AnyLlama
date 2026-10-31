@@ -2,6 +2,8 @@
 
 import asyncio
 import json
+import sys
+import sysconfig
 from datetime import datetime, timezone
 
 import httpx
@@ -16,6 +18,19 @@ MAX_RESPONSE_BYTES = 256 * 1024
 
 class UpdateError(Exception):
     pass
+
+
+def expected_asset(version: str) -> str | None:
+    platform = sysconfig.get_platform().lower()
+    if sys.platform == "win32":
+        arch = "arm64" if "arm64" in platform else "x64" if "amd64" in platform else None
+        return f"AnyLlama-{version}-win-{arch}.zip" if arch else None
+    if sys.platform == "darwin" and ("arm64" in platform or "universal2" in platform):
+        return f"AnyLlama-{version}-macos-arm64.zip"
+    if sys.platform.startswith("linux"):
+        arch = "arm64" if "aarch64" in platform else "amd64" if "x86_64" in platform else None
+        return f"anyllama_{version}_{arch}.deb" if arch else None
+    return None
 
 
 class UpdateChecker:
@@ -63,9 +78,9 @@ class UpdateChecker:
                 if not latest or not current or data.get("draft") or data.get("prerelease"):
                     raise UpdateError("invalid_release")
                 if latest > current:
-                    expected = f"AnyLlama-{tag.removeprefix('v')}-win-x64.zip"
+                    expected = expected_asset(tag.removeprefix("v"))
                     assets = data.get("assets")
-                    if not isinstance(assets, list) or not any(
+                    if not expected or not isinstance(assets, list) or not any(
                         isinstance(asset, dict)
                         and asset.get("name") == expected
                         and asset.get("state") == "uploaded"

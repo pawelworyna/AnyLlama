@@ -1,6 +1,14 @@
 # Validation — 2026-10-30
 
 Target IDE found on this machine: **Visual Studio Community 2026 18.11.2**.
+
+The v0.5.0 multi-platform release adds native CI builds and smoke tests for Windows ARM64,
+macOS Apple Silicon and Linux amd64/arm64. Linux amd64 was also exercised locally in WSL:
+the test suite ran and the frozen binary extracted from the `.deb` started successfully.
+The local WSL build uses the host glibc version; GitHub releases build on Ubuntu 22.04.
+Desktop tray interaction, macOS Keychain, Linux Secret Service, and actual ARM hardware
+remain to be checked in interactive sessions on those systems. GitHub runner execution
+and publication must be verified after push; local tests do not establish those results.
 Implementation/build runtime: **CPython 3.13.18, Windows x64**.
 
 ## Executed

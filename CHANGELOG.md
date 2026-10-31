@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.5.0 — 2026-10-31
+
+- Add release builds for Windows ARM64, Apple Silicon and Linux amd64/arm64 Debian packages.
+- Use macOS Keychain and Linux Secret Service for API keys. Linux uses a terminal-backed launcher.
+
 ## 0.4.2 — 2026-10-31
 
 - Clarify how to add AnyLlama as an Ollama provider in Visual Studio and reload its model list.

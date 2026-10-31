@@ -73,7 +73,7 @@ PRESETS = {
         "base_url": "http://127.0.0.1:8000/v1",
         "mark": "MLX",
         "requires_key": False,
-        "note": "oMLX runs on Apple Silicon/macOS. For this Windows proxy, use an existing local tunnel to your Mac or enter its HTTPS API address. Enter the server API key if required.",
+        "note": "oMLX runs on Apple Silicon/macOS. Use its local URL or the server's private network IP. Enter the server API key if required.",
     },
     "custom": {
         "name": "Custom OpenAI-compatible",

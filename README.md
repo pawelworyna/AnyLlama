@@ -2,16 +2,28 @@
 
 Your models. One local endpoint for Visual Studio 2026 and VS Code.
 
-AnyLlama is a local Windows application that presents cloud providers and local model
+AnyLlama is a local application that presents cloud providers and local model
 servers through Ollama and Chat Completions APIs. It has 18 named
 [provider profiles](docs/PROVIDERS.md), plus Custom OpenAI-compatible.
 It includes an English web dashboard, a tray icon, a model picker and request diagnostics.
 
-## Windows app
+## Download and install
 
-Download the Windows x64 EXE or ZIP from [GitHub Releases](https://github.com/pawelworyna/AnyLlama/releases).
-The EXE includes Python; no separate Python installation is needed. Start it, add a provider,
-enable models and copy the local endpoint into your IDE. The app lives in the system tray.
+Download the package for your system from [GitHub Releases](https://github.com/pawelworyna/AnyLlama/releases):
+
+- **Windows x64:** `AnyLlama.exe` or the `win-x64.zip` archive.
+- **Windows ARM64:** the `win-arm64.zip` archive. Extract it and run `AnyLlama.exe`.
+- **macOS Apple Silicon:** the `macos-arm64.zip` archive. Extract and open `AnyLlama.app`.
+  The application is ad-hoc signed but is not notarized by Apple; macOS can block its first launch.
+- **Debian / Ubuntu:** the `amd64.deb` or `arm64.deb` package for your processor. Install it with
+  `sudo apt install ./anyllama_VERSION_ARCH.deb`, replacing the filename with the download.
+  Builds target Ubuntu 22.04 or newer. Launch **AnyLlama** from your application menu or run
+  `anyllama` in a terminal. On Linux a terminal remains open while the proxy runs; close it to exit.
+  Linux requires a graphical browser and an unlocked Secret Service (for example GNOME Keyring)
+  to store API keys. No Python installation is needed on any platform.
+
+Start the app, add a provider, enable models and copy the local endpoint into your IDE.
+On Windows and macOS the app lives in the system tray / menu bar.
 See [provider setup and compatibility](docs/PROVIDERS.md) for cloud and local servers.
 
 ![Dashboard with sample provider data](docs/screenshots/overview.png)
@@ -74,9 +86,9 @@ uv run python scripts/package_release.py
 
 For the browser and frozen-app acceptance checks, see [validation](docs/VALIDATION.md).
 
-The Windows x64 build creates `dist/<version>/AnyLlama.exe` with its own Python runtime.
+The Windows build creates `dist/<version>/AnyLlama.exe` with its own Python runtime.
 No administrator rights or Python installation are required to run the EXE.
-Autostart is opt-in. Exit through the tray menu to stop the application completely.
+Autostart is opt-in on Windows. Exit through the tray menu to stop the application completely.
 If another application occupies the default port, run `AnyLlama.exe --port 11436`
 once to save a different port, then copy the updated endpoint into Visual Studio.
 To upgrade, exit the previous application through its tray menu before launching the new EXE.
@@ -90,7 +102,7 @@ disabled there. No provider keys, prompts or conversation data are sent to GitHu
 The application never installs or runs a downloaded update.
 
 Maintainers can bump versions through **Prepare release** and review/merge the generated PR;
-**Release** then tests, builds and publishes the Windows files and SHA-256 checksums automatically.
+**Release** then tests, builds and publishes packages and SHA-256 checksums automatically.
 See [publishing and release instructions](docs/RELEASING.md).
 
 Since v0.2.2, the default port is **11434**, matching
@@ -133,9 +145,11 @@ new metrics are not reconstructed. The schema upgrades automatically on first la
 
 ## Data and privacy
 
-Configuration and the most recent 1,000 request summaries are stored in
-`%LOCALAPPDATA%\AnyLlama\anyllama.db`. API keys are stored in Windows Credential Manager
-under service `AnyLlama`; they are never returned to the dashboard or configuration export.
+Configuration and the most recent 1,000 request summaries stay on your device. The data
+directory is `%LOCALAPPDATA%\AnyLlama` on Windows, `~/Library/Application Support/AnyLlama`
+on macOS and `$XDG_DATA_HOME/AnyLlama` (normally `~/.local/share/AnyLlama`) on Linux.
+API keys are stored under service `AnyLlama` in Windows Credential Manager, macOS Keychain,
+or Linux Secret Service; they are never returned to the dashboard or configuration export.
 Activity stores timing, status, token counts and numeric cost measurements, not prompts or responses. Provider errors
 are summarized locally without persisting upstream response bodies.
 
@@ -160,7 +174,7 @@ every model will perform well in Visual Studio Agent. Reasoning signatures or pr
 state cannot always be translated between protocols; unsupported replays fail explicitly.
 Custom providers support Chat Completions, not the Responses or Anthropic Messages API.
 
-No local model downloads, embeddings, inline code completions, LAN sharing, installer,
+No local model downloads, embeddings, inline code completions, LAN sharing,
 automatic installation of updates or automated Visual Studio configuration edits are included.
 
 ## License and contributions

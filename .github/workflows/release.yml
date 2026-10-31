@@ -95,8 +95,79 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
+  build-other-platforms:
+    needs: tests
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-11-arm
+            platform: win-arm64
+            python_platform: win-arm64
+          - os: macos-15
+            platform: macos-arm64
+            python_platform: arm64
+          - os: ubuntu-22.04
+            platform: linux-amd64
+            python_platform: x86_64
+          - os: ubuntu-22.04-arm
+            platform: linux-arm64
+            python_platform: aarch64
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: '0.13.6'
+          python-version: '3.13'
+          enable-cache: true
+      - run: uv sync --frozen --group dev
+      - name: Verify Python architecture
+        env:
+          EXPECTED_ARCH: ${{ matrix.python_platform }}
+        run: uv run python -c "import os, sysconfig; actual = sysconfig.get_platform().lower(); expected = os.environ['EXPECTED_ARCH']; print(actual); assert expected in actual, f'Expected native {expected}, got {actual}'"
+      - name: Read release version
+        id: platform-version
+        run: uv run python scripts/release_version.py check
+      - run: uv run pytest -q
+      - name: Build Windows ARM64
+        if: runner.os == 'Windows'
+        run: |
+          uv run python scripts/build.py
+          uv run python scripts/verify_exe.py --skip-credential-store --skip-tray
+          uv run python -X warn_default_encoding -W error::EncodingWarning scripts/package_release.py --arch arm64
+      - name: Build macOS and Linux
+        if: runner.os != 'Windows'
+        run: |
+          uv run python scripts/build_unix.py
+          if [ "$RUNNER_OS" = macOS ]; then
+            uv run python scripts/verify_portable.py "dist/$(uv run python scripts/release_version.py check)/AnyLlama.app/Contents/MacOS/AnyLlama"
+            codesign --verify --deep --strict "dist/$(uv run python scripts/release_version.py check)/AnyLlama.app"
+          else
+            uv run python scripts/verify_portable.py "dist/$(uv run python scripts/release_version.py check)/AnyLlama"
+          fi
+          uv run python scripts/package_unix.py
+          if [ "$RUNNER_OS" = Linux ]; then
+            mkdir -p "$RUNNER_TEMP/anyllama-package"
+            dpkg-deb --extract dist/*/anyllama_*_*.deb "$RUNNER_TEMP/anyllama-package"
+            uv run python scripts/verify_portable.py "$RUNNER_TEMP/anyllama-package/usr/lib/anyllama/AnyLlama"
+          fi
+      - name: Upload platform package
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: release-${{ matrix.platform }}
+          path: |
+            dist/${{ steps.platform-version.outputs.version }}/AnyLlama-*-win-arm64.zip
+            dist/${{ steps.platform-version.outputs.version }}/AnyLlama-*-macos-arm64.zip
+            dist/${{ steps.platform-version.outputs.version }}/anyllama_*_*.deb
+          if-no-files-found: error
+          retention-days: 14
+
   publish:
-    needs: build
+    needs: [build, build-other-platforms]
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:
@@ -106,6 +177,11 @@ jobs:
         with:
           name: windows-release
           path: release
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: release-*
+          path: release
+          merge-multiple: true
       - name: Publish verified assets
         env:
           GH_TOKEN: ${{ github.token }}
@@ -116,6 +192,7 @@ jobs:
           set -euo pipefail
           cd release
           sha256sum --check SHA256SUMS.txt
+          sha256sum AnyLlama.exe AnyLlama-*.zip anyllama_*.deb THIRD_PARTY_NOTICES.txt validation.json > SHA256SUMS.txt
           if gh api --include "repos/$GH_REPO/git/ref/tags/$RELEASE_TAG" > "$RUNNER_TEMP/tag-response.txt"; then
             tag_sha=$(gh api "repos/$GH_REPO/commits/$RELEASE_TAG" --jq '.sha')
             if [ "$tag_sha" != "$SOURCE_SHA" ]; then

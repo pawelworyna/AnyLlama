@@ -7,7 +7,7 @@ import pytest
 from conftest import completion, login
 
 from anyllama.storage import Store
-from anyllama.updates import MAX_RESPONSE_BYTES, REPOSITORY, UpdateChecker
+from anyllama.updates import MAX_RESPONSE_BYTES, REPOSITORY, UpdateChecker, expected_asset
 
 
 def release(tag="v1.10.0", **extra):
@@ -16,10 +16,27 @@ def release(tag="v1.10.0", **extra):
         "draft": False,
         "prerelease": False,
         "assets": [
-            {"name": f"AnyLlama-{tag.removeprefix('v')}-win-x64.zip", "state": "uploaded", "size": 100}
+            {"name": expected_asset(tag.removeprefix('v')), "state": "uploaded", "size": 100}
         ],
         **extra,
     }
+
+
+@pytest.mark.parametrize(
+    "system,platform,expected",
+    [
+        ("win32", "win-amd64", "AnyLlama-1.2.3-win-x64.zip"),
+        ("win32", "win-arm64", "AnyLlama-1.2.3-win-arm64.zip"),
+        ("darwin", "macosx-12.0-arm64", "AnyLlama-1.2.3-macos-arm64.zip"),
+        ("linux", "linux-x86_64", "anyllama_1.2.3_amd64.deb"),
+        ("linux", "linux-aarch64", "anyllama_1.2.3_arm64.deb"),
+        ("linux", "linux-i686", None),
+    ],
+)
+def test_asset_matches_platform(monkeypatch, system, platform, expected):
+    monkeypatch.setattr("anyllama.updates.sys.platform", system)
+    monkeypatch.setattr("anyllama.updates.sysconfig.get_platform", lambda: platform)
+    assert expected_asset("1.2.3") == expected
 
 
 async def test_numeric_version_comparison_cache_and_safe_links(tmp_path):
