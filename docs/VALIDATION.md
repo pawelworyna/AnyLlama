@@ -95,7 +95,7 @@ after checking restart recovery. Neither script changes autostart or makes provi
    (or keep your existing connections) and run **Check & refresh**.
 2. Enable a model with Tools support. Confirm its context limit in **Models → Configure**.
 3. In VS 18.11.2, open **Chat → Manage Models → Add model provider → Ollama** and use
-   `http://127.0.0.1:11434` (or the endpoint currently shown by AnyLlama).
+   the AnyLlama endpoint with `/v1`, for example `http://127.0.0.1:11434/v1` with the default port.
 4. Select the exposed model and send a short prompt. Confirm streamed output and an
    Activity entry containing that provider and model.
 5. In a disposable solution, ask Agent to inspect two files and summarize their contents.

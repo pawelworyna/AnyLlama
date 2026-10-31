@@ -25,11 +25,19 @@ uv sync --frozen --group dev
 uv run anyllama
 ```
 
-The tray icon opens the dashboard. First launch opens a setup wizard. Add a provider,
-check its connection, select models, then add an Ollama provider in Visual Studio's
-**Chat → Manage Models → Add model provider**, using `http://127.0.0.1:11434`.
-The alternative OpenAI-compatible URL is `http://127.0.0.1:11434/v1` (use any nonempty
-placeholder key if the client requires one). Provider keys are configured only in AnyLlama.
+The tray icon opens the dashboard. First launch opens a setup wizard:
+
+1. Add your actual provider in AnyLlama, check the connection and enable the models you want.
+2. In Visual Studio, open **Chat → model picker → Manage models → Add model provider**.
+3. Select **Ollama** and enter the AnyLlama endpoint shown in **Overview** with `/v1`
+   appended, for example `http://127.0.0.1:11434/v1` with the default port. Click **Add**.
+4. Pick an enabled model from the Ollama provider's list. Models from different providers
+   appear together under this connection. If you change the selection in AnyLlama and VS
+   still shows the old list, remove and add the Ollama provider again using the same endpoint.
+
+No Ollama installation is needed. Provider keys are configured only in AnyLlama. The
+OpenAI-compatible API also uses the `/v1` address (use a nonempty placeholder key only
+if that client requires one). Copy the actual endpoint from the dashboard if you changed ports.
 
 For a foreground server without a tray icon:
 
@@ -44,8 +52,7 @@ the model list in Visual Studio. Ollama itself does not need to be installed.
 If models are greyed out with **“Your own models work only in Agent (Preview)”**, start
 a new Agent (Preview) thread. In VS 18.11, if that entry is absent, check **Tools → Options →
 GitHub → Copilot → Copilot Chat → Use new Copilot chat experience**, restart Visual Studio
-after changing the option, then create a new thread. Keep the Ollama endpoint at the proxy's
-base URL, without `/v1`. Existing models do not need to be duplicated.
+after changing the option, then create a new thread. Existing models do not need to be duplicated.
 
 If the new chat shows **“Your active GitHub account is blocked from using preview Copilot
 features”**, check **Editor preview features** in your [GitHub Copilot settings](https://github.com/settings/copilot/features)
@@ -82,8 +89,8 @@ links to GitHub for manual download. Automatic checks are enabled by default and
 disabled there. No provider keys, prompts or conversation data are sent to GitHub.
 The application never installs or runs a downloaded update.
 
-Maintainers can bump versions through **Prepare release**, review/merge the generated PR,
-then run **Release** to test, build and publish the Windows files and SHA-256 checksums.
+Maintainers can bump versions through **Prepare release** and review/merge the generated PR;
+**Release** then tests, builds and publishes the Windows files and SHA-256 checksums automatically.
 See [publishing and release instructions](docs/RELEASING.md).
 
 Since v0.2.2, the default port is **11434**, matching

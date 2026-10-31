@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.2 — 2026-10-31
+
+- Clarify how to add AnyLlama as an Ollama provider in Visual Studio and reload its model list.
+
 ## 0.4.1 — 2026-10-31
 
 - Allow local providers such as LM Studio to use HTTP on private network IP addresses,
