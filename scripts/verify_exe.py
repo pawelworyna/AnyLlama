@@ -71,7 +71,7 @@ def main():
             time.sleep(0.1)
         else:
             raise AssertionError("Frozen application did not start")
-        info = json.loads((data / "instance.json").read_text())
+        info = json.loads((data / "instance.json").read_text(encoding="utf-8"))
         token = parse_qs(urlsplit(info["url"]).fragment)["token"][0]
         response = client.post("/admin/api/session", headers={"Authorization": "Bearer " + token})
         response.raise_for_status()
@@ -116,7 +116,7 @@ def main():
             assert duplicate.wait(timeout=15) == 0
         finally:
             stop(duplicate)
-        assert json.loads((data / "instance.json").read_text())["pid"] == first["pid"]
+        assert json.loads((data / "instance.json").read_text(encoding="utf-8"))["pid"] == first["pid"]
         stop(process)
         process = subprocess.Popen(args, **kwargs)
         headers, second = ready()

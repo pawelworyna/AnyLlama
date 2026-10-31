@@ -87,7 +87,7 @@ jobs:
         run: |
           uv run python scripts/verify_exe.py --skip-credential-store --skip-tray | Tee-Object -FilePath "dist/$env:APP_VERSION/validation.json"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-      - run: uv run python scripts/package_release.py
+      - run: uv run python -X warn_default_encoding -W error::EncodingWarning scripts/package_release.py
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: windows-release

@@ -47,7 +47,7 @@ def main():
                     notices.append(path.read_text(encoding="utf-8", errors="replace"))
         pending.extend(Requirement(r) for r in distribution.requires or [])
     notices.append("\nHTMX 2.0.8\nhttps://github.com/bigskysoftware/htmx\n")
-    notices.append((root / "src/anyllama/static/HTMX-LICENSE.txt").read_text())
+    notices.append((root / "src/anyllama/static/HTMX-LICENSE.txt").read_text(encoding="utf-8"))
     python_license = Path(sys.base_prefix) / "LICENSE.txt"
     if python_license.is_file():
         notices.append("\nPython runtime\n" + python_license.read_text(encoding="utf-8"))
