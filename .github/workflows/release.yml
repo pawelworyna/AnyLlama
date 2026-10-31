@@ -145,7 +145,7 @@ jobs:
           uv run python scripts/build_unix.py
           if [ "$RUNNER_OS" = macOS ]; then
             uv run python scripts/verify_portable.py "dist/$(uv run python scripts/release_version.py check)/AnyLlama.app/Contents/MacOS/AnyLlama"
-            lipo -verify_arch arm64 "dist/$(uv run python scripts/release_version.py check)/AnyLlama.app/Contents/MacOS/AnyLlama"
+            lipo "dist/$(uv run python scripts/release_version.py check)/AnyLlama.app/Contents/MacOS/AnyLlama" -verify_arch arm64
             codesign --verify --deep --strict "dist/$(uv run python scripts/release_version.py check)/AnyLlama.app"
           else
             uv run python scripts/verify_portable.py "dist/$(uv run python scripts/release_version.py check)/AnyLlama"
